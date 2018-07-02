@@ -111,6 +111,16 @@ namespace NuGet.ProjectModel
         /// </summary>
         public WarningProperties ProjectWideWarningProperties { get; set; } = new WarningProperties();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool RestorePackagesWithLockFile { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string NuGetLockFilePath { get; set; }
+
         public override int GetHashCode()
         {
             var hashCode = new HashCodeCombiner();

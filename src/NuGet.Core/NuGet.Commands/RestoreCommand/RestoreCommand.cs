@@ -263,6 +263,18 @@ namespace NuGet.Commands
                     telemetry.TelemetryEvent[RestoreSuccess] = _success;
                 }
 
+                // generate nuget.lock.json file
+                string nuGetlockFilePath = null;
+                NuGetLockFile nuGetLockFile = null;
+
+                if (_request.Project.RestoreMetadata.RestorePackagesWithLockFile)
+                {
+                    nuGetlockFilePath = GetNuGetLockFilePath();
+
+                    nuGetLockFile = new NuGetLockFileBuilder(NuGetLockFileFormat.Version)
+                        .CreateNuGetLockFile(assetsFile);
+                }
+
                 restoreTime.Stop();
 
                 // Create result
@@ -276,9 +288,23 @@ namespace NuGet.Commands
                     assetsFilePath,
                     cacheFile,
                     cacheFilePath,
+                    nuGetlockFilePath,
+                    nuGetLockFile,
                     _request.ProjectStyle,
                     restoreTime.Elapsed);
             }
+        }
+
+        private string GetNuGetLockFilePath()
+        {
+            var path = _request.Project.RestoreMetadata.NuGetLockFilePath;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                path = Path.Combine(_request.Project.BaseDirectory, NuGetLockFileFormat.LockFileName);
+            }
+
+            return path;
         }
 
         private string ConcatAsString<T>(IEnumerable<T> enumerable)
