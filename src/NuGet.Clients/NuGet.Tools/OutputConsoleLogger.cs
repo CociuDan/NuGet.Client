@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.Shell;
 using NuGet.Common;
 using NuGet.PackageManagement.VisualStudio;
 using NuGet.ProjectManagement;
-using NuGet.SolutionRestoreManager;
 using NuGet.VisualStudio;
 
 namespace NuGetVSExtension
