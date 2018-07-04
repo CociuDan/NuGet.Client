@@ -194,10 +194,8 @@ namespace NuGet.Commands
                 {
                     if (NuGetLockFile != null && !string.IsNullOrEmpty(NuGetLockFilePath))
                     {
-                        var nuGetLockFileFormat = new NuGetLockFileFormat();
-
                         FileUtility.Replace(
-                            (outputPath) => nuGetLockFileFormat.Write(outputPath, NuGetLockFile),
+                            (outputPath) => NuGetLockFileFormat.Write(outputPath, NuGetLockFile),
                             NuGetLockFilePath);
                     }
 

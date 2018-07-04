@@ -17,33 +17,22 @@ namespace NuGet.ProjectModel
         /// <summary>
         /// Target framework.
         /// </summary>
-        public NuGetFramework TargetFramework { get; }
+        public NuGetFramework TargetFramework { get; set; }
 
         /// <summary>
         /// Null for RIDless graphs.
         /// </summary>
-        public string RuntimeIdentifier { get; }
+        public string RuntimeIdentifier { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public IList<LockFileDependency> Dependencies { get; } = new List<LockFileDependency>();
+        public IList<LockFileDependency> Dependencies { get; set; } = new List<LockFileDependency>();
 
         /// <summary>
         /// Full framework name.
         /// </summary>
         public string Name => GetNameString(TargetFramework.DotNetFrameworkName, RuntimeIdentifier);
-
-        public NuGetLockFileTarget(NuGetFramework targetFramework)
-            : this(targetFramework, runtimeIdentifier: null)
-        {
-        }
-
-        public NuGetLockFileTarget(NuGetFramework targetFramework, string runtimeIdentifier)
-        {
-            TargetFramework = targetFramework ?? throw new ArgumentNullException(nameof(targetFramework));
-            RuntimeIdentifier = runtimeIdentifier;
-        }
 
         public bool Equals(NuGetLockFileTarget other)
         {

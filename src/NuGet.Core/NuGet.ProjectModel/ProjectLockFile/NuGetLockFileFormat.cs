@@ -3,10 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NuGet.Common;
+using NuGet.Frameworks;
+using NuGet.Versioning;
 
 namespace NuGet.ProjectModel
 {
@@ -21,7 +25,102 @@ namespace NuGet.ProjectModel
         private const string DependenciesProperty = "dependencies";
         private const string TypeProperty = "type";
 
-        public void Write(string filePath, NuGetLockFile lockFile)
+        public NuGetLockFile Read(string filePath)
+        {
+            return Read(filePath, NullLogger.Instance);
+        }
+
+        public NuGetLockFile Read(string filePath, ILogger log)
+        {
+            using (var stream = File.OpenRead(filePath))
+            {
+                return Read(stream, log, filePath);
+            }
+        }
+
+        public NuGetLockFile Read(Stream stream, ILogger log, string path)
+        {
+            using (var textReader = new StreamReader(stream))
+            {
+                return Read(textReader, log, path);
+            }
+        }
+
+        public NuGetLockFile Read(TextReader reader, ILogger log, string path)
+        {
+            try
+            {
+                var json = JsonUtility.LoadJson(reader);
+                var lockFile = ReadLockFile(json);
+                lockFile.Path = path;
+                return lockFile;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(string.Format(CultureInfo.CurrentCulture,
+                    Strings.Log_ErrorReadingLockFile,
+                    path, ex.Message));
+
+                // Ran into parsing errors, mark it as unlocked and out-of-date
+                return null;
+            }
+        }
+
+        private static NuGetLockFile ReadLockFile(JObject cursor)
+        {
+            var lockFile = new NuGetLockFile()
+            {
+                Version = LockFileFormat.ReadInt(cursor, VersionProperty, defaultValue: int.MinValue),
+                Targets = LockFileFormat.ReadObject(cursor[DependenciesProperty] as JObject, ReadDependency),
+            };
+
+            return lockFile;
+        }
+
+        private static NuGetLockFileTarget ReadDependency(string property, JToken json)
+        {
+            var target = new NuGetLockFileTarget();
+            var parts = property.Split(LockFileFormat.PathSplitChars, 2);
+            target.TargetFramework = NuGetFramework.Parse(parts[0]);
+            if (parts.Length == 2)
+            {
+                target.RuntimeIdentifier = parts[1];
+            }
+
+            target.Dependencies = LockFileFormat.ReadObject(json as JObject, ReadTargetDependency);
+
+            return target;
+        }
+
+        private static LockFileDependency ReadTargetDependency(string property, JToken json)
+        {
+            var dependency = new LockFileDependency();
+
+            dependency.Id = property;
+
+            var jObject = json as JObject;
+
+            var typeString = LockFileFormat.ReadProperty<string>(jObject, TypeProperty);
+
+            if (!string.IsNullOrEmpty(typeString)
+                && Enum.TryParse<PackageInstallationType>(typeString, ignoreCase: true, result: out var installationType))
+            {
+                dependency.Type = installationType;
+            }
+
+            var versionString = LockFileFormat.ReadProperty<string>(jObject, VersionProperty);
+
+            if (!string.IsNullOrEmpty(versionString))
+            {
+                dependency.Version = NuGetVersion.Parse(versionString);
+            }
+
+            dependency.Sha512 = LockFileFormat.ReadProperty<string>(jObject, Sha512Property);
+
+            return dependency;
+        }
+
+        public static void Write(string filePath, NuGetLockFile lockFile)
         {
             // Create the directory if it does not exist
             var fileInfo = new FileInfo(filePath);
@@ -33,7 +132,7 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public void Write(Stream stream, NuGetLockFile lockFile)
+        public static void Write(Stream stream, NuGetLockFile lockFile)
         {
             using (var textWriter = new StreamWriter(stream))
             {
@@ -41,7 +140,7 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public void Write(TextWriter textWriter, NuGetLockFile lockFile)
+        public static void Write(TextWriter textWriter, NuGetLockFile lockFile)
         {
             using (var jsonWriter = new JsonTextWriter(textWriter))
             {
@@ -57,7 +156,7 @@ namespace NuGet.ProjectModel
             var json = new JObject
             {
                 [VersionProperty] = new JValue(lockFile.Version),
-                [DependenciesProperty] = WriteObject(lockFile.Targets, WriteTarget),
+                [DependenciesProperty] = LockFileFormat.WriteObject(lockFile.Targets, WriteTarget),
             };
 
             return json;
@@ -65,7 +164,7 @@ namespace NuGet.ProjectModel
 
         private static JProperty WriteTarget(NuGetLockFileTarget target)
         {
-            var json = WriteObject(target.Dependencies, WriteTargetDependency);
+            var json = LockFileFormat.WriteObject(target.Dependencies, WriteTargetDependency);
 
             var key = target.Name;
 
@@ -91,14 +190,5 @@ namespace NuGet.ProjectModel
             return new JProperty(dependency.Id, json);
         }
 
-        private static JObject WriteObject<TItem>(IEnumerable<TItem> items, Func<TItem, JProperty> writeItem)
-        {
-            var array = new JObject();
-            foreach (var item in items)
-            {
-                array.Add(writeItem(item));
-            }
-            return array;
-        }
     }
 }

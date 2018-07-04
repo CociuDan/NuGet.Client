@@ -34,7 +34,11 @@ namespace NuGet.Commands
 
             foreach (var target in orderedTargets)
             {
-                var nuGettarget = new NuGetLockFileTarget(target.TargetFramework, target.RuntimeIdentifier);
+                var nuGettarget = new NuGetLockFileTarget()
+                {
+                    TargetFramework = target.TargetFramework,
+                    RuntimeIdentifier = target.RuntimeIdentifier
+                };
 
                 var framework = assetsFile.PackageSpec.TargetFrameworks.FirstOrDefault(
                     f => EqualityUtility.EqualsWithNullCheck(f.FrameworkName, target.TargetFramework));
@@ -55,6 +59,8 @@ namespace NuGet.Commands
 
                     nuGettarget.Dependencies.Add(dependency);
                 }
+
+                nuGettarget.Dependencies = nuGettarget.Dependencies.OrderBy(d => d.Type).ToList();
 
                 lockFile.Targets.Add(nuGettarget);
             }

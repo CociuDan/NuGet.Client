@@ -128,5 +128,9 @@ namespace NuGet.VisualStudio
         /// Project's target framework
         /// </summary>
         Task<NuGetFramework> GetTargetFrameworkAsync();
+
+        Task<bool> DoesRestorePackagesWithLockFileAsync();
+
+        Task<string> GetNuGetLockFilePathAsync();
     }
 }

@@ -149,6 +149,15 @@ namespace NuGet.Commands
                     }
                 }
 
+                string nuGetlockFilePath = null;
+                NuGetLockFile nuGetLockFile = null;
+
+                // read nuget.lock.json file if exists
+                if (NuGetLockFileUtilities.IsNuGetLockFileSupported(_request.Project))
+                {
+
+                }
+
                 IEnumerable<RestoreTargetGraph> graphs = null;
                 using (var restoreGraphTelemetry = TelemetryActivity.CreateTelemetryActivityWithNewOperationIdAndEvent(parentId: _operationId, eventName: GenerateRestoreGraph))
                 {
@@ -264,9 +273,6 @@ namespace NuGet.Commands
                 }
 
                 // generate nuget.lock.json file
-                string nuGetlockFilePath = null;
-                NuGetLockFile nuGetLockFile = null;
-
                 if (_request.Project.RestoreMetadata.RestorePackagesWithLockFile)
                 {
                     nuGetlockFilePath = GetNuGetLockFilePath();

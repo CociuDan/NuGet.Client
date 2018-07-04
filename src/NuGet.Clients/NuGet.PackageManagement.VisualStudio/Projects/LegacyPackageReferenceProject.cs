@@ -363,7 +363,9 @@ namespace NuGet.PackageManagement.VisualStudio
                     ProjectWideWarningProperties = WarningProperties.GetWarningProperties(
                         treatWarningsAsErrors: _vsProjectAdapter.TreatWarningsAsErrors, 
                         noWarn: _vsProjectAdapter.NoWarn,
-                        warningsAsErrors: _vsProjectAdapter.WarningsAsErrors)
+                        warningsAsErrors: _vsProjectAdapter.WarningsAsErrors),
+                    RestorePackagesWithLockFile = await _vsProjectAdapter.DoesRestorePackagesWithLockFileAsync(),
+                    NuGetLockFilePath = await _vsProjectAdapter.GetNuGetLockFilePathAsync()
                 }
             };
         }
