@@ -21,16 +21,18 @@ namespace NuGet.ProjectModel
         public static readonly string LockFileName = "nuget.lock.json";
 
         private const string VersionProperty = "version";
+        private const string ResolvedProperty = "resolved";
+        private const string RequestedProperty = "requested";
         private const string Sha512Property = "sha512";
         private const string DependenciesProperty = "dependencies";
         private const string TypeProperty = "type";
 
-        public NuGetLockFile Read(string filePath)
+        public static NuGetLockFile Read(string filePath)
         {
             return Read(filePath, NullLogger.Instance);
         }
 
-        public NuGetLockFile Read(string filePath, ILogger log)
+        public static NuGetLockFile Read(string filePath, ILogger log)
         {
             using (var stream = File.OpenRead(filePath))
             {
@@ -38,7 +40,7 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public NuGetLockFile Read(Stream stream, ILogger log, string path)
+        public static NuGetLockFile Read(Stream stream, ILogger log, string path)
         {
             using (var textReader = new StreamReader(stream))
             {
@@ -46,7 +48,7 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public NuGetLockFile Read(TextReader reader, ILogger log, string path)
+        public static NuGetLockFile Read(TextReader reader, ILogger log, string path)
         {
             try
             {
@@ -61,7 +63,6 @@ namespace NuGet.ProjectModel
                     Strings.Log_ErrorReadingLockFile,
                     path, ex.Message));
 
-                // Ran into parsing errors, mark it as unlocked and out-of-date
                 return null;
             }
         }
@@ -108,11 +109,11 @@ namespace NuGet.ProjectModel
                 dependency.Type = installationType;
             }
 
-            var versionString = LockFileFormat.ReadProperty<string>(jObject, VersionProperty);
+            var versionString = LockFileFormat.ReadProperty<string>(jObject, ResolvedProperty);
 
             if (!string.IsNullOrEmpty(versionString))
             {
-                dependency.Version = NuGetVersion.Parse(versionString);
+                dependency.ResolvedVersion = NuGetVersion.Parse(versionString);
             }
 
             dependency.Sha512 = LockFileFormat.ReadProperty<string>(jObject, Sha512Property);
@@ -177,9 +178,9 @@ namespace NuGet.ProjectModel
 
             json[TypeProperty] = dependency.Type.ToString();
 
-            if (dependency.Version != null)
+            if (dependency.ResolvedVersion != null)
             {
-                json[VersionProperty] = dependency.Version.ToNormalizedString();
+                json[ResolvedProperty] = dependency.ResolvedVersion.ToNormalizedString();
             }
 
             if (dependency.Sha512 != null)

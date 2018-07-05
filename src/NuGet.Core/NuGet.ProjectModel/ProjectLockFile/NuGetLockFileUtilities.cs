@@ -10,7 +10,7 @@ namespace NuGet.ProjectModel
         public static bool IsNuGetLockFileSupported(PackageSpec project)
         {
             return project.RestoreMetadata.RestorePackagesWithLockFile &&
-                File.Exists(project.RestoreMetadata.NuGetLockFilePath);
+                File.Exists(GetNuGetLockFilePath(project));
         }
 
         public static string GetNuGetLockFilePath(PackageSpec project)

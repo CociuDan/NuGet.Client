@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NuGet.Common;
+using NuGet.Packaging.Core;
 using NuGet.Shared;
 using NuGet.Versioning;
 
@@ -14,11 +15,15 @@ namespace NuGet.ProjectModel
     {
         public string Id { get; set; }
 
-        public NuGetVersion Version { get; set; }
+        public NuGetVersion ResolvedVersion { get; set; }
+
+        public VersionRange RequestedVersion { get; set; }
 
         public string Sha512 { get; set; }
 
         public PackageInstallationType Type { get; set; }
+
+        public IList<PackageDependency> Dependencies { get; set; } = new List<PackageDependency>();
 
         public bool Equals(LockFileDependency other)
         {
@@ -33,7 +38,8 @@ namespace NuGet.ProjectModel
             }
 
             return PathUtility.GetStringComparerBasedOnOS().Equals(Id, other.Id) &&
-                EqualityUtility.EqualsWithNullCheck(Version, other.Version) &&
+                EqualityUtility.EqualsWithNullCheck(ResolvedVersion, other.ResolvedVersion) &&
+                EqualityUtility.EqualsWithNullCheck(RequestedVersion, other.RequestedVersion) &&
                 Sha512 == other.Sha512 &&
                 Type == other.Type;
         }
@@ -48,7 +54,8 @@ namespace NuGet.ProjectModel
             var combiner = new HashCodeCombiner();
 
             combiner.AddObject(Id);
-            combiner.AddObject(Version);
+            combiner.AddObject(ResolvedVersion);
+            combiner.AddObject(RequestedVersion);
             combiner.AddObject(Sha512);
             combiner.AddObject(Type);
 

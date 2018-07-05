@@ -50,7 +50,7 @@ namespace NuGet.Commands
                     var dependency = new LockFileDependency()
                     {
                         Id = identity.Id,
-                        Version = identity.Version,
+                        ResolvedVersion = identity.Version,
                         Sha512 = libraryLookup[identity].Sha512,
                         Type = framework.Dependencies.Any(
                             package => PathUtility.GetStringComparerBasedOnOS().Equals(package.Name, identity.Id))

@@ -155,7 +155,9 @@ namespace NuGet.Commands
                 // read nuget.lock.json file if exists
                 if (NuGetLockFileUtilities.IsNuGetLockFileSupported(_request.Project))
                 {
+                    nuGetlockFilePath = NuGetLockFileUtilities.GetNuGetLockFilePath(_request.Project);
 
+                    nuGetLockFile = NuGetLockFileFormat.Read(nuGetlockFilePath, _logger);
                 }
 
                 IEnumerable<RestoreTargetGraph> graphs = null;
@@ -275,7 +277,7 @@ namespace NuGet.Commands
                 // generate nuget.lock.json file
                 if (_request.Project.RestoreMetadata.RestorePackagesWithLockFile)
                 {
-                    nuGetlockFilePath = GetNuGetLockFilePath();
+                    nuGetlockFilePath = NuGetLockFileUtilities.GetNuGetLockFilePath(_request.Project);
 
                     nuGetLockFile = new NuGetLockFileBuilder(NuGetLockFileFormat.Version)
                         .CreateNuGetLockFile(assetsFile);
@@ -299,18 +301,6 @@ namespace NuGet.Commands
                     _request.ProjectStyle,
                     restoreTime.Elapsed);
             }
-        }
-
-        private string GetNuGetLockFilePath()
-        {
-            var path = _request.Project.RestoreMetadata.NuGetLockFilePath;
-
-            if (string.IsNullOrEmpty(path))
-            {
-                path = Path.Combine(_request.Project.BaseDirectory, NuGetLockFileFormat.LockFileName);
-            }
-
-            return path;
         }
 
         private string ConcatAsString<T>(IEnumerable<T> enumerable)

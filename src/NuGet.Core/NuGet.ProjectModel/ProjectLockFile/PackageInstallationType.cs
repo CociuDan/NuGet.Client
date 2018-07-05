@@ -13,6 +13,11 @@ namespace NuGet.ProjectModel
         /// <summary>
         /// Package is transitively available to the project instead of directly installed.
         /// </summary>
-        Transitive = 1
+        Transitive = 1,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Project = 2
     }
 }
