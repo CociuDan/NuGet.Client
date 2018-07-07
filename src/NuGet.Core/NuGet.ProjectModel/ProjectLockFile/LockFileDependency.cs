@@ -40,6 +40,7 @@ namespace NuGet.ProjectModel
             return PathUtility.GetStringComparerBasedOnOS().Equals(Id, other.Id) &&
                 EqualityUtility.EqualsWithNullCheck(ResolvedVersion, other.ResolvedVersion) &&
                 EqualityUtility.EqualsWithNullCheck(RequestedVersion, other.RequestedVersion) &&
+                EqualityUtility.SequenceEqualWithNullCheck(Dependencies, other.Dependencies) &&
                 Sha512 == other.Sha512 &&
                 Type == other.Type;
         }
@@ -56,6 +57,7 @@ namespace NuGet.ProjectModel
             combiner.AddObject(Id);
             combiner.AddObject(ResolvedVersion);
             combiner.AddObject(RequestedVersion);
+            combiner.AddSequence(Dependencies);
             combiner.AddObject(Sha512);
             combiner.AddObject(Type);
 

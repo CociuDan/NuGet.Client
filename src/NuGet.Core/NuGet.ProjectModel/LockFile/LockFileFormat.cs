@@ -630,7 +630,7 @@ namespace NuGet.ProjectModel
                 WriteObject(item.Packages, WritePackageDependency));
         }
 
-        private static PackageDependency ReadPackageDependency(string property, JToken json)
+        public static PackageDependency ReadPackageDependency(string property, JToken json)
         {
             var versionStr = json.Value<string>();
             return new PackageDependency(
@@ -638,7 +638,7 @@ namespace NuGet.ProjectModel
                 versionStr == null ? null : VersionRange.Parse(versionStr));
         }
 
-        private static JProperty WritePackageDependency(PackageDependency item)
+        public static JProperty WritePackageDependency(PackageDependency item)
         {
             return new JProperty(
                 item.Id,

@@ -49,12 +49,35 @@ namespace NuGet.Commands
 
                     var dependency = new LockFileDependency()
                     {
-                        Id = identity.Id,
-                        ResolvedVersion = identity.Version,
+                        Id = library.Name,
+                        ResolvedVersion = library.Version,
                         Sha512 = libraryLookup[identity].Sha512,
-                        Type = framework.Dependencies.Any(
-                            package => PathUtility.GetStringComparerBasedOnOS().Equals(package.Name, identity.Id))
-                            ? PackageInstallationType.Direct : PackageInstallationType.Transitive
+                        Dependencies = library.Dependencies
+                    };
+
+                    var framework_dep = framework.Dependencies.First(
+                        dep => PathUtility.GetStringComparerBasedOnOS().Equals(dep.Name, library.Name));
+
+                    if (framework_dep != null)
+                    {
+                        dependency.Type = PackageInstallationType.Direct;
+                        dependency.RequestedVersion = framework_dep.LibraryRange.VersionRange;
+                    }
+                    else
+                    {
+                        dependency.Type = PackageInstallationType.Transitive;
+                    }
+
+                    nuGettarget.Dependencies.Add(dependency);
+                }
+
+                foreach (var projectRef in target.Libraries.Where(e => e.Type == LibraryType.Project))
+                {
+                    var dependency = new LockFileDependency()
+                    {
+                        Id = projectRef.Name,
+                        Dependencies = projectRef.Dependencies,
+                        Type = PackageInstallationType.Project
                     };
 
                     nuGettarget.Dependencies.Add(dependency);

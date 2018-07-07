@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -109,14 +110,22 @@ namespace NuGet.ProjectModel
                 dependency.Type = installationType;
             }
 
-            var versionString = LockFileFormat.ReadProperty<string>(jObject, ResolvedProperty);
+            var resolvedString = LockFileFormat.ReadProperty<string>(jObject, ResolvedProperty);
 
-            if (!string.IsNullOrEmpty(versionString))
+            if (!string.IsNullOrEmpty(resolvedString))
             {
-                dependency.ResolvedVersion = NuGetVersion.Parse(versionString);
+                dependency.ResolvedVersion = NuGetVersion.Parse(resolvedString);
+            }
+
+            var requestedString = LockFileFormat.ReadProperty<string>(jObject, RequestedProperty);
+
+            if (!string.IsNullOrEmpty(requestedString))
+            {
+                dependency.RequestedVersion = VersionRange.Parse(requestedString);
             }
 
             dependency.Sha512 = LockFileFormat.ReadProperty<string>(jObject, Sha512Property);
+            dependency.Dependencies = LockFileFormat.ReadObject(json[DependenciesProperty] as JObject, LockFileFormat.ReadPackageDependency);
 
             return dependency;
         }
@@ -178,6 +187,11 @@ namespace NuGet.ProjectModel
 
             json[TypeProperty] = dependency.Type.ToString();
 
+            if (dependency.RequestedVersion != null)
+            {
+                json[RequestedProperty] = dependency.RequestedVersion.ToNormalizedString();
+            }
+
             if (dependency.ResolvedVersion != null)
             {
                 json[ResolvedProperty] = dependency.ResolvedVersion.ToNormalizedString();
@@ -186,6 +200,13 @@ namespace NuGet.ProjectModel
             if (dependency.Sha512 != null)
             {
                 json[Sha512Property] = dependency.Sha512;
+            }
+
+            if (dependency.Dependencies?.Count > 0)
+            {
+                var ordered = dependency.Dependencies.OrderBy(dep => dep.Id, StringComparer.Ordinal);
+
+                json[DependenciesProperty] = LockFileFormat.WriteObject(ordered, LockFileFormat.WritePackageDependency);
             }
 
             return new JProperty(dependency.Id, json);
